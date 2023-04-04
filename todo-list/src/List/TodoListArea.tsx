@@ -1,13 +1,15 @@
 import { ReactNode } from "react";
+import { useTodoState } from "../Todo/TodoProvider";
 
 interface todoListAreaProps {
   children: ReactNode;
-  todoCount: number;
 }
 
 // High Order Component
 const TodoListArea = (props: todoListAreaProps) => {
-  if (props.todoCount === 0) return null;
+  const todoState = useTodoState();
+
+  if (todoState.todos.length === 0) return null;
   return <>{props.children}</>;
 };
 
