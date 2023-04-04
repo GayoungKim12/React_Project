@@ -1,24 +1,28 @@
 import styled from "@emotion/styled";
-import PokeNameChip from "../PokeNameChip";
-import PokeMarkChip from "../PokeMarkChip";
+import PokeNameChip from "../Common/PokeNameChip";
+import PokeMarkChip from "../Common/PokeMarkChip";
 import { useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
-import {
-  PokemonDetailType,
-  fetchPokemonDetail,
-} from "../../Service/PokemonService";
-import { PokeImageSkeleton } from "../PokeImageSkeleton";
+import { useEffect } from "react";
+import { PokeImageSkeleton } from "../Common/PokeImageSkeleton";
 import { useIntersectionObserver } from "react-intersection-observer-hook";
+import { RootState, useAppDispatch } from "../Store";
+import { useSelector } from "react-redux";
+import { fetchPokemonDetail } from "../Store/PokemonDetailSlice";
 
 interface PokeCardProps {
   name: string;
 }
 
 const PokeCard = (props: PokeCardProps) => {
+  const dispatch = useAppDispatch();
   const navigate = useNavigate();
+  const imageType = useSelector((state: RootState) => state.imageType.type);
   const [ref, { entry }] = useIntersectionObserver();
   const isVisible = entry && entry.isIntersecting;
-  const [pokemon, setPokemon] = useState<PokemonDetailType | null>(null);
+  const { pokemonDetails } = useSelector(
+    (state: RootState) => state.pokemonDetails
+  );
+  const pokemon = pokemonDetails[props.name];
 
   const handleClick = () => {
     navigate(`/pokemon/${props.name}`);
@@ -26,12 +30,8 @@ const PokeCard = (props: PokeCardProps) => {
 
   useEffect(() => {
     if (!isVisible) return;
-
-    (async () => {
-      const detail = await fetchPokemonDetail(props.name);
-      setPokemon(detail);
-    })();
-  }, [props.name, isVisible]);
+    dispatch(fetchPokemonDetail(props.name));
+  }, [dispatch, props.name, isVisible]);
 
   if (!pokemon) {
     return (
@@ -59,10 +59,7 @@ const PokeCard = (props: PokeCardProps) => {
         />
       </Header>
       <Body>
-        <Img
-          src={pokemon.images.officialArtworkFront}
-          alt={pokemon.koreanName}
-        />
+        <Img src={pokemon.images[imageType]} alt={pokemon.koreanName} />
       </Body>
       <Footer>
         <PokeMarkChip />
@@ -106,6 +103,7 @@ const Body = styled.section`
 
 const Img = styled.img`
   width: 180px;
+  max-height: 180px;
 `;
 
 const Footer = styled.section`

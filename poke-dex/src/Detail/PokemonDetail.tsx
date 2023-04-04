@@ -1,25 +1,26 @@
 import styled from "@emotion/styled";
-import PokeMarkChip from "../PokeMarkChip";
-import { useEffect, useState } from "react";
+import PokeMarkChip from "../Common/PokeMarkChip";
+import { useEffect } from "react";
 import { useParams } from "react-router-dom";
-import {
-  PokemonDetailType,
-  fetchPokemonDetail,
-} from "../../Service/PokemonService";
-import { PokeImageSkeleton } from "../PokeImageSkeleton";
+import { PokeImageSkeleton } from "../Common/PokeImageSkeleton";
+import { useSelector } from "react-redux";
+import { RootState, useAppDispatch } from "../Store";
+import { fetchPokemonDetail } from "../Store/PokemonDetailSlice";
 
 const PokemonDetail = () => {
+  const dispatch = useAppDispatch();
   const { name } = useParams();
-  const [pokemon, setPokemon] = useState<PokemonDetailType | null>(null);
+  const imageType = useSelector((state: RootState) => state.imageType.type);
+  const { pokemonDetails } = useSelector(
+    (state: RootState) => state.pokemonDetails
+  );
+  const pokemon = name ? pokemonDetails[name] : null;
 
   useEffect(() => {
     if (!name) return;
 
-    (async () => {
-      const detail = await fetchPokemonDetail(name);
-      setPokemon(detail);
-    })();
-  }, [name]);
+    dispatch(fetchPokemonDetail(name));
+  }, [dispatch, name]);
 
   if (!name || !pokemon) {
     return (
@@ -34,14 +35,11 @@ const PokemonDetail = () => {
       </Container>
     );
   }
-
+  //field as keyof typeof someObj
   return (
     <Container>
       <ImgContainer>
-        <Img
-          src={pokemon.images.officialArtworkFront}
-          alt={pokemon.koreanName}
-        />
+        <Img src={pokemon.images[imageType]} alt={pokemon.koreanName} />
       </ImgContainer>
       <Divider />
       <Body>
